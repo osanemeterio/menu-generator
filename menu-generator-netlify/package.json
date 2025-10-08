@@ -1,0 +1,17 @@
+{
+  "name": "menu-generator",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Netlify Function to generate weekly menus using OpenAI, called from Lovable as a webhook.",
+  "main": "index.js",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {},
+  "scripts": {
+    "dev": "netlify dev",
+    "serve": "netlify dev",
+    "build": "echo \"Nothing to build\""
+  }
+}
