@@ -1,9 +1,21 @@
 // netlify/functions/generarMenu.js
-// Classic Netlify Functions syntax (CommonJS). Node 18 has global fetch.
+// Classic Netlify Functions (CommonJS). Node 18 tiene fetch global.
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Access-Control-Allow-Methods": "POST, OPTIONS"
+};
+
 exports.handler = async (event, context) => {
   try {
+    // Preflight CORS
+    if (event.httpMethod === "OPTIONS") {
+      return { statusCode: 200, headers: corsHeaders, body: "ok" };
+    }
+
     if (event.httpMethod !== "POST") {
-      return { statusCode: 405, body: JSON.stringify({ ok: false, error: "Method Not Allowed" }) };
+      return { statusCode: 405, headers: corsHeaders, body: JSON.stringify({ ok: false, error: "Method Not Allowed" }) };
     }
 
     const body = JSON.parse(event.body || "{}");
@@ -17,7 +29,7 @@ ${alimentos}
 Respeta estas restricciones: ${restricciones}.
 Intenta no repetir la misma receta más de 2 veces en la semana y busca variedad (legumbre, cereal, verdura, proteína).
 
-Devuélvelo en formato JSON **válido** exactamente con esta estructura:
+Devuélvelo en formato JSON válido exactamente con esta estructura:
 [
   {"dia":"Lunes","desayuno":"...","comida":"...","cena":"..."},
   {"dia":"Martes","desayuno":"...","comida":"...","cena":"..."},
@@ -30,7 +42,7 @@ Devuélvelo en formato JSON **válido** exactamente con esta estructura:
 
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
-      return { statusCode: 500, body: JSON.stringify({ ok: false, error: "OPENAI_API_KEY not set" }) };
+      return { statusCode: 500, headers: corsHeaders, body: JSON.stringify({ ok: false, error: "OPENAI_API_KEY not set" }) };
     }
 
     const resp = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -59,18 +71,20 @@ Devuélvelo en formato JSON **válido** exactamente con esta estructura:
         const maybeJson = content.slice(firstBracket, lastBracket + 1);
         menu = JSON.parse(maybeJson);
       } else {
+        // como salida de seguridad, devuelve el texto sin parsear
         menu = content;
       }
     }
 
     return {
       statusCode: 200,
-      headers: { "Content-Type": "application/json" },
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
       body: JSON.stringify({ ok: true, menu })
     };
   } catch (err) {
     return {
       statusCode: 500,
+      headers: corsHeaders,
       body: JSON.stringify({ ok: false, error: String(err) })
     };
   }
